@@ -1058,7 +1058,17 @@ let openfile ?(perm = 0o644) ~mode filename =
                   file_perm_r perm])
 ;;
 
-let close ?restart = unary_fd ?restart Unix.close
+let close ?restart fd =
+  improve ?restart (fun () ->
+    try
+      Unix.close fd
+    with
+    (* FreeBSD can return [ECONNRESET] if the file descriptor was a stream
+       socket that was shut down by the peer before all pending data was
+       delivered. *)
+    | Unix.Unix_error (Unix.ECONNRESET, _, _) -> ())
+    (fun () -> [fd_r fd])
+;;
 
 let with_close fd ~f = protect ~f:(fun () -> f fd) ~finally:(fun () -> close fd)
 
@@ -2588,7 +2598,12 @@ let shutdown fd ~mode =
       Unix.shutdown fd ~mode
     with
     (* the error below is benign, it means that the other side disconnected *)
-    | Unix.Unix_error (Unix.ENOTCONN, _, _) -> ())
+    | Unix.Unix_error (Unix.ENOTCONN, _, _) -> ()
+    (* FreeBSD can return [ECONNRESET] if the file descriptor was a stream
+       socket that was shut down by the peer before all pending data was
+       delivered. This is mentioned in documentation for [close] only, but
+       can occur for [shutdown] as well. *)
+    | Unix.Unix_error (Unix.ECONNRESET, _, _) -> ())
     (fun () -> [fd_r fd; ("mode", sexp_of_shutdown_command mode)])
 ;;
 
