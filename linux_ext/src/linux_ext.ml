@@ -464,7 +464,7 @@ end
 module Clock = Null.Clock
 
 [%%endif]
-[%%ifdef JSC_TIMERFD]
+[%%if defined(JSC_LINUX_EXT) && defined(JSC_TIMERFD)]
 
 module Timerfd = struct
   module Clock : sig
