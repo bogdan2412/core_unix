@@ -139,7 +139,7 @@ let cpu_list_of_string_exn str =
         acc @ rlist)
       else (
         (* This is probably simpler with procedural code, but
-           we'll do it functional-style :o).  *)
+           we'll do it functional-style :o). *)
         let n_sublists = Float.round_up ((last - first + 1) // stride) |> Float.to_int in
         let starts = List.init n_sublists ~f:(fun li -> first + (li * stride)) in
         let rlist =
@@ -536,7 +536,7 @@ end
 module Fallocate = Null.Fallocate
 
 [%%endif]
-[%%ifdef JSC_TIMERFD]
+[%%if defined JSC_LINUX_EXT && defined JSC_TIMERFD]
 
 module Timerfd = struct
   module Clock : sig
