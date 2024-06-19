@@ -614,7 +614,7 @@ end
 module Timerfd = Null.Timerfd
 
 [%%endif]
-[%%ifdef JSC_MEMFD]
+[%%if defined(JSC_LINUX_EXT) && defined(JSC_MEMFD)]
 
 module Memfd = struct
   module Flags = struct
