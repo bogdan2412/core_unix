@@ -114,7 +114,9 @@ static void assign_tm(struct tm *tm, value v_tm) {
 }
 
 CAMLprim value core_time_ns_strftime(value v_locale, value v_tm, value v_fmt) {
+#if defined(__linux__)
   locale_t locale = (locale_t)Nativeint_val(v_locale);
+#endif
   struct tm tm = {0};
   assign_tm(&tm, v_tm);
   size_t buf_len = 10 * caml_string_length(v_fmt) + 1;
@@ -129,9 +131,13 @@ CAMLprim value core_time_ns_strftime(value v_locale, value v_tm, value v_fmt) {
        use a hack to distinguish zero-length output from failure. */
     buf[0] = '\x01';
     errno = 0;
+#if defined(__linux__)
     size_t len = locale == (locale_t)0
                      ? strftime(buf, buf_len, String_val(v_fmt), &tm)
                      : strftime_l(buf, buf_len, String_val(v_fmt), &tm, locale);
+#else
+    size_t len = strftime(buf, buf_len, String_val(v_fmt), &tm);
+#endif
     if (len || !buf[0])
       break;
     if (errno && errno != ERANGE) {

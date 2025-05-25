@@ -1,3 +1,4 @@
+#if defined(__linux__)
 #define _GNU_SOURCE
 
 #include <assert.h>
@@ -162,3 +163,4 @@ CAMLprim value unix_setlocale(int32_t category, value v_locale) {
 CAMLprim value unix_setlocale_bytecode(value v_category, value v_locale) {
   return unix_setlocale(Int32_val(v_category), v_locale);
 }
+#endif

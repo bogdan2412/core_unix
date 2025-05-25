@@ -222,6 +222,9 @@ let%test_unit "strftime with long output" =
        "%c")
 ;;
 
+[%%import "config.h"]
+[%%ifdef JSC_LINUX_EXT]
+
 let%test_unit "strftime with locale" =
   Locale.with_ "de_DE" (fun locale ->
     [%test_result: string]
@@ -240,6 +243,8 @@ let%test_unit "strftime with locale" =
          }
          "%a, %d %b %Y %H:%M:%S GMT"))
 ;;
+
+[%%endif]
 
 module Unix_tm_for_testing = struct
   type t = Unix.tm =
@@ -320,6 +325,8 @@ let%expect_test "strptime trailing input" =
   [%expect {| (Failure "unix_strptime: did not consume entire input") |}]
 ;;
 
+[%%ifdef JSC_LINUX_EXT]
+
 let%test_unit "strptime with locale" =
   let res =
     Locale.with_ "de_DE" (fun locale ->
@@ -345,6 +352,8 @@ let%test_unit "strptime with locale" =
     ; tm_isdst = false
     }
 ;;
+
+[%%endif]
 
 module _ = struct
   open Inet_addr

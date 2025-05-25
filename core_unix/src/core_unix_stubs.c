@@ -514,9 +514,15 @@ static value ns_precision_stat_of_struct_stat(struct stat s) {
   Store_field(v_stat, 6, Val_int(s.st_gid));
   Store_field(v_stat, 7, Val_int(s.st_rdev));
   Store_field(v_stat, 8, Val_file_offset(s.st_size));
+#if defined(__APPLE__)
+  Store_field(v_stat, 9, caml_alloc_int63(timespec_to_int_ns(s.st_atimespec)));
+  Store_field(v_stat, 10, caml_alloc_int63(timespec_to_int_ns(s.st_mtimespec)));
+  Store_field(v_stat, 11, caml_alloc_int63(timespec_to_int_ns(s.st_ctimespec)));
+#else
   Store_field(v_stat, 9, caml_alloc_int63(timespec_to_int_ns(s.st_atim)));
   Store_field(v_stat, 10, caml_alloc_int63(timespec_to_int_ns(s.st_mtim)));
   Store_field(v_stat, 11, caml_alloc_int63(timespec_to_int_ns(s.st_ctim)));
+#endif
   CAMLreturn(v_stat);
 }
 
@@ -1559,11 +1565,15 @@ static value alloc_tm(const struct tm *tm) {
 
 CAMLprim value core_unix_strptime(value v_locale, value v_allow_trailing_input,
                                   value v_fmt, value v_s) {
-  locale_t locale = (locale_t)Nativeint_val(v_locale);
   struct tm tm = {0};
+#if defined(__linux__)
+  locale_t locale = (locale_t)Nativeint_val(v_locale);
   char *end_of_consumed_input =
       locale == (locale_t)0 ? strptime(String_val(v_s), String_val(v_fmt), &tm)
                             : strptime_l(String_val(v_s), String_val(v_fmt), &tm, locale);
+#else
+  char *end_of_consumed_input = strptime(String_val(v_s), String_val(v_fmt), &tm);
+#endif
   if (!end_of_consumed_input)
     caml_failwith("unix_strptime: match failed");
   if (!Bool_val(v_allow_trailing_input) &&
@@ -2044,6 +2054,12 @@ CAMLprim value core_unix_execvp(value v_prog, value v_args) {
   caml_uerror("execvp", v_prog);
 }
 
+#if defined(__APPLE__)
+extern int caml_unix_execvpe_emulation(const char * name,
+                                       char * const argv[],
+                                       char * const envp[]);
+#endif
+
 CAMLprim value core_unix_execvpe(value v_prog, value v_args, value v_env) {
   const char *path = String_val(v_prog);
 
@@ -2055,7 +2071,13 @@ CAMLprim value core_unix_execvpe(value v_prog, value v_args, value v_env) {
   char *env_storage[nenv + 1];
   char *const *envp = fill_args(env_storage, nenv, v_env);
 
+#if defined(__APPLE__)
+  int err = caml_unix_execvpe_emulation(path, argv, envp);
+
+  caml_unix_error(err, "execvpe", v_prog);
+#else
   execvpe(path, argv, envp);
 
   caml_uerror("execvpe", v_prog);
+#endif
 }
