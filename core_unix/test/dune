@@ -3,4 +3,11 @@
  (libraries async core_kernel.caml_unix core core_unix
    expect_test_helpers_core filename_unix sys_unix)
  (preprocess
-  (pps ppx_jane)))
+  (pps ppx_jane ppx_optcomp))
+ (preprocessor_deps config.h))
+
+(rule
+ (targets config.h)
+ (deps)
+ (action
+  (bash "cp %{lib:jst-config:config.h} .")))

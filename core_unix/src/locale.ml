@@ -1,3 +1,6 @@
+[%%import "config.h"]
+[%%ifdef JSC_LINUX_EXT]
+
 open! Core
 open! Import
 
@@ -343,3 +346,14 @@ end
 
 let posix = lazy (posix ())
 let native = lazy (native ())
+
+[%%else]
+
+type t = unit
+
+module Expert = struct
+  let to_native () = Nativeint.zero
+  let native_zero = Nativeint.zero
+end
+
+[%%endif]

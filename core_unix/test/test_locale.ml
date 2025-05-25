@@ -1,5 +1,9 @@
 open! Core
 open! Import
+
+[%%import "config.h"]
+[%%ifdef JSC_LINUX_EXT]
+
 module Locale = Unix.Locale
 
 let print_global_locale () =
@@ -219,3 +223,5 @@ let%expect_test "Locale.native" =
   print_endline (Locale.to_string_hum locale);
   [%expect {| de_DE.UTF-8 |}]
 ;;
+
+[%%endif]

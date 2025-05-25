@@ -1,3 +1,6 @@
+[%%import "config.h"]
+[%%ifdef JSC_LINUX_EXT]
+
 open! Core
 open! Import
 
@@ -233,3 +236,17 @@ module Expert : sig
   (** The native [locale_t] value [LC_GLOBAL_LOCALE]. *)
   val native_global : nativeint
 end
+
+[%%else]
+
+type t
+
+module Expert : sig
+  (** Returns the native [locale_t] value for use in POSIX C APIs. *)
+  val to_native : t -> nativeint
+
+  (** The native [locale_t] value [(locale_t)0]. *)
+  val native_zero : nativeint
+end
+
+[%%endif]
