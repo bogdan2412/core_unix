@@ -3,6 +3,7 @@
    Unix_error that gets raised is that it doesn't include information about the arguments
    to the function that failed. *)
 [%%import "config.h"]
+[%%import "core_unix_config.h"]
 
 open! Core
 open! Import
@@ -2279,6 +2280,8 @@ let utimensat ?relative_to ?(follow_symlinks = true) ~path ~access ~modif () =
     ~modif:(Option.map modif ~f:Time_ns.to_int63_ns_since_epoch)
 ;;
 
+[%%ifdef JSC_STRPTIME_L]
+
 external strptime
   :  nativeint
   -> allow_trailing_input:bool
@@ -2290,6 +2293,21 @@ external strptime
 let strptime ?locale ?(allow_trailing_input = false) ~fmt s =
   strptime (locale_to_native locale) ~allow_trailing_input ~fmt s
 ;;
+
+[%%else]
+
+external strptime
+  :  allow_trailing_input:bool
+  -> fmt:string
+  -> string
+  -> Unix.tm
+  = "core_unix_strptime"
+
+let strptime ?(allow_trailing_input = false) ~fmt s =
+  strptime ~allow_trailing_input ~fmt s
+;;
+
+[%%endif]
 
 type interval_timer = Unix.interval_timer =
   | ITIMER_REAL
