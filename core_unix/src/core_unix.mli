@@ -1,6 +1,8 @@
 (** This file is a modified version of unixLabels.mli from the OCaml distribution. Many of
     these functions raise exceptions but do not have a _exn suffixed name. *)
 
+[%%import "core_unix_config.h"]
+
 open! Core
 open! Import
 
@@ -1289,6 +1291,8 @@ val mktime : tm -> float * tm
     'man strftime' for format options. *)
 val strftime : ?locale:Locale.t -> tm -> string -> string
 
+[%%ifdef JSC_STRPTIME_L]
+
 (** Given a format string, convert a corresponding string to a date and time See 'man
     strptime' for format options.
 
@@ -1299,6 +1303,16 @@ val strptime
   -> fmt:string
   -> string
   -> Unix.tm
+
+[%%else]
+
+val strptime
+  :  ?allow_trailing_input:bool (** default = false *)
+  -> fmt:string
+  -> string
+  -> Unix.tm
+
+[%%endif]
 
 (** Schedule a [SIGALRM] signal after the given number of seconds. *)
 val alarm : int -> int

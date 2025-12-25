@@ -40,6 +40,9 @@ val pause_forever : unit -> never_returns
     libraries linked into a given executable. *)
 val format : ?locale:Core_unix.Locale.t -> t -> string -> zone:Zone.t -> string
 
+[%%import "core_unix_config.h"]
+[%%ifdef JSC_STRPTIME_L]
+
 (** [parse string ~fmt ~zone] parses [string], according to [fmt], which follows the
     formatting rules given in 'man strptime'. The time is assumed to be in the given
     timezone.
@@ -62,3 +65,14 @@ val parse
   -> fmt:string
   -> zone:Zone.t
   -> t
+
+[%%else]
+
+val parse
+  :  ?allow_trailing_input:bool (** default = false *)
+  -> string
+  -> fmt:string
+  -> zone:Zone.t
+  -> t
+
+[%%endif]

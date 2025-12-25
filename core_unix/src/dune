@@ -11,7 +11,18 @@
    signal_unix spawn ppx_stable_witness.stable_witness unix)
  (preprocess
   (pps ppx_jane ppx_optcomp))
- (preprocessor_deps config.h))
+ (preprocessor_deps config.h core_unix_config.h))
+
+(rule
+ (targets core_unix_config.h)
+ (deps (:first_dep ../discover/discover.exe))
+ (action
+  (run %{first_dep})))
+
+(install
+ (section lib)
+ (files
+  (core_unix_config.h as core_unix_config.h)))
 
 (rule
  (targets config.h thread_id.h)

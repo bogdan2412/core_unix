@@ -73,6 +73,17 @@ let of_tm tm ~zone =
   of_date_ofday ~zone date ofday
 ;;
 
+[%%import "core_unix_config.h"]
+[%%ifdef JSC_STRPTIME_L]
+
 let parse ?locale ?allow_trailing_input s ~fmt ~zone =
   Unix.strptime ?locale ?allow_trailing_input ~fmt s |> of_tm ~zone
 ;;
+
+[%%else]
+
+let parse ?allow_trailing_input s ~fmt ~zone =
+  Unix.strptime ?allow_trailing_input ~fmt s |> of_tm ~zone
+;;
+
+[%%endif]

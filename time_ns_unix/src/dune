@@ -4,4 +4,11 @@
  (libraries core core_unix ppx_diff.diffable sexplib
    ppx_stable_witness.stable_witness)
  (preprocess
-  (pps ppx_jane)))
+  (pps ppx_jane ppx_optcomp))
+ (preprocessor_deps core_unix_config.h))
+
+(rule
+ (targets core_unix_config.h)
+ (deps)
+ (action
+  (bash "cp %{lib:core_unix:core_unix_config.h} .")))

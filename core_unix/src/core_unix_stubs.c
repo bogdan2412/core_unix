@@ -65,6 +65,7 @@
 #include "config.h"
 #include "timespec.h"
 #include "thread_id.h"
+#include "core_unix_config.h"
 
 #if defined(JSC_WORDEXP)
 #include <wordexp.h>
@@ -1563,17 +1564,14 @@ static value alloc_tm(const struct tm *tm) {
   return res;
 }
 
+#if defined(JSC_STRPTIME_L)
 CAMLprim value core_unix_strptime(value v_locale, value v_allow_trailing_input,
                                   value v_fmt, value v_s) {
-  struct tm tm = {0};
-#if defined(__linux__)
   locale_t locale = (locale_t)Nativeint_val(v_locale);
+  struct tm tm = {0};
   char *end_of_consumed_input =
       locale == (locale_t)0 ? strptime(String_val(v_s), String_val(v_fmt), &tm)
                             : strptime_l(String_val(v_s), String_val(v_fmt), &tm, locale);
-#else
-  char *end_of_consumed_input = strptime(String_val(v_s), String_val(v_fmt), &tm);
-#endif
   if (!end_of_consumed_input)
     caml_failwith("unix_strptime: match failed");
   if (!Bool_val(v_allow_trailing_input) &&
@@ -1581,6 +1579,18 @@ CAMLprim value core_unix_strptime(value v_locale, value v_allow_trailing_input,
     caml_failwith("unix_strptime: did not consume entire input");
   return alloc_tm(&tm);
 }
+#else
+CAMLprim value core_unix_strptime(value v_allow_trailing_input, value v_fmt, value v_s) {
+  struct tm tm = {0};
+  char *end_of_consumed_input = strptime(String_val(v_s), String_val(v_fmt), &tm);
+  if (!end_of_consumed_input)
+    caml_failwith("unix_strptime: match failed");
+  if (!Bool_val(v_allow_trailing_input) &&
+      end_of_consumed_input != String_val(v_s) + caml_string_length(v_s))
+    caml_failwith("unix_strptime: did not consume entire input");
+  return alloc_tm(&tm);
+}
+#endif
 
 CAMLprim value core_unix_remove(value v_path) {
   CAMLparam1(v_path);
